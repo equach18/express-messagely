@@ -24,7 +24,7 @@ router.get("/:id", async (req, res, next) => {
       req.user.username !== message.from_user.username &&
       req.user.username !== message.to_user.username
     ) {
-      throw new ExpressError("Unauthorized to view this message", 403);
+      throw new ExpressError("Unauthorized to view this message", 401);
     }
     ß;
 
@@ -67,7 +67,7 @@ router.post("/:id/read", ensureCorrectUser, async (req, res, next) => {
       req.user.username !== message.from_user.username &&
       req.user.username !== message.to_user.username
     ) {
-      throw new ExpressError("Unauthorized to view this message", 403);
+      throw new ExpressError("Unauthorized to set this message to read", 401);
     }
     return res.json({ message });
   } catch (err) {
