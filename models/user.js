@@ -30,9 +30,7 @@ class User {
       [username]
     );
     let user = result.rows[0];
-    if (!user) throw new ExpressError(`${username} does not exist.`, 404);
-    const isValid = await bcrypt.compare(password, user.password);
-    return isValid;
+    return user && await bcrypt.compare(password, user.password);
   }
 
   /** Update last_login_at for user */
