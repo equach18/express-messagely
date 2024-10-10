@@ -1,6 +1,7 @@
 const Router = require("express").Router;
 const Message = require("../models/message");
 const { ensureLoggedIn, ensureCorrectUser } = require("../middleware/auth");
+const ExpressError = require("../expressError");
 const router = new Router();
 /** GET /:id - get detail of message.
  *
@@ -15,7 +16,7 @@ const router = new Router();
  *
  **/
 
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", ensureLoggedIn, async (req, res, next) => {
   try {
     const { id } = req.params;
     const message = await Message.get(id);
@@ -26,7 +27,6 @@ router.get("/:id", async (req, res, next) => {
     ) {
       throw new ExpressError("Unauthorized to view this message", 401);
     }
-    ß;
 
     return res.json({ message });
   } catch (err) {
@@ -59,17 +59,16 @@ router.post("/", ensureLoggedIn, async (req, res, next) => {
  *
  **/
 
-router.post("/:id/read", ensureCorrectUser, async (req, res, next) => {
+router.post("/:id/read", ensureLoggedIn, async (req, res, next) => {
   try {
     const { id } = req.params;
-    const message = await Message.markRead(id);
-    if (
-      req.user.username !== message.from_user.username &&
-      req.user.username !== message.to_user.username
-    ) {
-      throw new ExpressError("Unauthorized to set this message to read", 401);
+    let message = await Message.get(id);
+    if (message.to_user.username !== req.user.username) {
+      throw new ExpressError("Cannot set this message to read", 401);
     }
-    return res.json({ message });
+    let updatedMsg = await Message.markRead(id);
+
+    return res.json({ message:updatedMsg });
   } catch (err) {
     return next(err);
   }
